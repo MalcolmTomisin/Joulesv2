@@ -20,6 +20,7 @@ import androidx.media.MediaBrowserServiceCompat;
 
 import com.google.android.exoplayer2.ExoPlayer;
 
+import java.io.IOException;
 import java.util.List;
 
 public class MusicService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener,
@@ -35,6 +36,8 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     private AudioManager audioManager;
     private AudioAttributes mPlayBack;
     private AudioFocusRequest focusRequest;
+    //path to the audio file
+    private String mediaFile;
     public MusicService() {
     }
 
@@ -90,6 +93,14 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
         mediaPlayer.setAudioAttributes(mPlayBack);
         //TODO
         // set audio source and prepare mediaplayer
+        // temp set
+        try {
+            // Set the data source to the mediaFile location
+            mediaPlayer.setDataSource(mediaFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            stopSelf();
+        }
     }
     @Override
     public IBinder onBind(Intent intent) {
