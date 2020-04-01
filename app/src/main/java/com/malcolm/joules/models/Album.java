@@ -17,10 +17,10 @@ public class Album {
         this.year = -1;
     }
 
-    public Album(long artistId, String artistName, long id, int songCount, String title, int year) {
+    public Album(long id, String title, String artistName, long artistId, int songCount, int year) {
+        this.id = id;
         this.artistId = artistId;
         this.artistName = artistName;
-        this.id = id;
         this.songCount = songCount;
         this.title = title;
         this.year = year;

@@ -22,7 +22,7 @@ public class Song {
         this.trackNumber = -1;
     }
 
-    public Song(long albumId, String albumName, long artistId, String artistName, int duration, long id, String title, int trackNumber) {
+    public Song(long id,long albumId, long artistId,String title,  String artistName,String albumName, int duration,   int trackNumber) {
         this.albumId = albumId;
         this.albumName = albumName;
         this.artistId = artistId;

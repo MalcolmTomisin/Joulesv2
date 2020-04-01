@@ -13,7 +13,7 @@ public class Artist {
         this.albumCount = -1;
     }
 
-    public Artist(int albumCount, long id, String name, int songCount) {
+    public Artist(long id, String name, int songCount, int albumCount) {
         this.albumCount = albumCount;
         this.id = id;
         this.name = name;
