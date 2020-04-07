@@ -32,12 +32,12 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     private MediaSessionCompat mediaSession;
     private PlaybackStateCompat.Builder stateBuilder;
     private int resumePosition;
-    private  String ErrorUnknown = "Mediaplayer error";
     private AudioManager audioManager;
     private AudioAttributes mPlayBack;
     private AudioFocusRequest focusRequest;
     //path to the audio file
     private String mediaFile;
+    private String TAG = MusicService.class.getSimpleName();
     public MusicService() {
     }
 
@@ -66,6 +66,13 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
             mediaPlayer.seekTo(resumePosition);
             mediaPlayer.start();
         }
+    }
+
+    private void skipToNext(){
+
+    }
+    private void skipToPrevious(){
+
     }
 
     private void initMediaPlayer () {
@@ -157,7 +164,54 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onCreate() {
+        mediaSession = new MediaSessionCompat(this,TAG);
+        this.setSessionToken(mediaSession.getSessionToken());
+        mediaSession.setCallback(new MediaSessionCompat.Callback() {
+            @Override
+            public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
+                return super.onMediaButtonEvent(mediaButtonEvent);
+            }
+
+            @Override
+            public void onPlay() {
+                super.onPlay();
+                resumeMedia();
+            }
+
+            @Override
+            public void onPause() {
+                super.onPause();
+                pauseMedia();
+            }
+
+            @Override
+            public void onSkipToNext() {
+                super.onSkipToNext();
+            }
+
+            @Override
+            public void onSkipToPrevious() {
+                super.onSkipToPrevious();
+            }
+
+            @Override
+            public void onStop() {
+                super.onStop();
+            }
+
+            @Override
+            public void onSeekTo(long pos) {
+                super.onSeekTo(pos);
+            }
+        });
+        super.onCreate();
     }
 
     @Override
@@ -185,12 +239,13 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        String errorUnknown = "Mediaplayer error";
         switch (what) {
             case MediaPlayer.MEDIA_INFO_UNKNOWN :
-                Log.d(ErrorUnknown, "MEDIA ERROR UNKNOWN " + extra);
+                Log.d(errorUnknown, "MEDIA ERROR UNKNOWN " + extra);
                 break;
             case MediaPlayer.MEDIA_ERROR_IO:
-                Log.d(ErrorUnknown, "INPUT ERROR " + extra );
+                Log.d(errorUnknown, "INPUT ERROR " + extra );
                 break;
 
         }

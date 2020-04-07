@@ -13,11 +13,10 @@ import java.util.List;
 public class ArtistLoader {
     public static Cursor makeArtistCursor(Context context, String selection, String[] paramArrayOfString){
         final String artistSortOrder = PreferencesUtil.getInstance(context).getArtistSortOrder();
-        Cursor cursor = context.getContentResolver().query(
+        return context.getContentResolver().query(
                 MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,
                 new String[]{"_id", "artist", "number_of_albums"},
                 selection, paramArrayOfString, artistSortOrder);
-        return cursor;
     }
     public static Artist getArtist (Cursor cursor) {
         Artist artist = new Artist();
