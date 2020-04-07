@@ -31,7 +31,7 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     private ExoPlayer exoPlayer;
     private MediaSessionCompat mediaSession;
     private PlaybackStateCompat.Builder stateBuilder;
-    private int resumePosition;
+    private int resumePosition = 0;
     private AudioManager audioManager;
     private AudioAttributes mPlayBack;
     private AudioFocusRequest focusRequest;
@@ -63,8 +63,9 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
 
     private void resumeMedia() {
         if (!mediaPlayer.isPlaying()) {
-            mediaPlayer.seekTo(resumePosition);
-            mediaPlayer.start();
+            if (resumePosition != 0)
+            {mediaPlayer.seekTo(resumePosition);}
+            else{playMedia();}
         }
     }
 
@@ -73,6 +74,12 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     }
     private void skipToPrevious(){
 
+    }
+    private void seekPos(long pos){
+        if (mediaPlayer == null)
+            return;
+        mediaPlayer.seekTo((int) pos);
+        mediaPlayer.start();
     }
 
     private void initMediaPlayer () {
@@ -171,6 +178,7 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
 
     @Override
     public void onCreate() {
+        super.onCreate();
         mediaSession = new MediaSessionCompat(this,TAG);
         this.setSessionToken(mediaSession.getSessionToken());
         mediaSession.setCallback(new MediaSessionCompat.Callback() {
@@ -204,14 +212,16 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
             @Override
             public void onStop() {
                 super.onStop();
+                stopMedia();
             }
 
             @Override
             public void onSeekTo(long pos) {
                 super.onSeekTo(pos);
+                seekPos(pos);
             }
         });
-        super.onCreate();
+        mediaSession.setActive(true);
     }
 
     @Override

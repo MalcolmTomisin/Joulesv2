@@ -1,5 +1,7 @@
 package com.malcolm.joules.models;
 
+import android.net.Uri;
+
 public class Song {
 
     public final long albumId;
@@ -10,6 +12,7 @@ public class Song {
     public final long id;
     public final String title;
     public final int trackNumber;
+    public final Uri uri;
 
     public Song() {
         this.id = -1;
@@ -20,9 +23,10 @@ public class Song {
         this.albumName = "";
         this.duration = -1;
         this.trackNumber = -1;
+        this.uri = null;
     }
 
-    public Song(long id,long albumId, long artistId,String title,  String artistName,String albumName, int duration,   int trackNumber) {
+    public Song(long id,long albumId, long artistId,String title,  String artistName,String albumName, int duration,   int trackNumber, Uri content) {
         this.albumId = albumId;
         this.albumName = albumName;
         this.artistId = artistId;
@@ -31,5 +35,6 @@ public class Song {
         this.id = id;
         this.title = title;
         this.trackNumber = trackNumber;
+        this.uri = content;
     }
 }

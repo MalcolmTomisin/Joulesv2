@@ -1,7 +1,9 @@
 package com.malcolm.joules.loaders;
 
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Audio.AudioColumns;
 
@@ -27,8 +29,8 @@ public class LastAddedLoader {
                 int trackNumber = mCursor.getInt(5);
                 long artistId = mCursor.getInt(6);
                 long albumId = mCursor.getLong(7);
-
-                final Song song = new Song(id, albumId, artistId, title, artist, album, duration, trackNumber);
+                Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+                final Song song = new Song(id, albumId, artistId, title, artist, album, duration, trackNumber, contentUri);
 
                 mSongList.add(song);
             } while (mCursor.moveToNext());

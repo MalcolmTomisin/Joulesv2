@@ -1,6 +1,7 @@
 package com.malcolm.joules.loaders;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -25,7 +26,8 @@ public class ArtistSongLoader {
                 int trackNumber = cursor.getInt(5);
                 long albumId = cursor.getInt(6);
 
-                songsList.add(new Song(id, albumId, artistID, title, artist, album, duration, trackNumber));
+                Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+                songsList.add(new Song(id, albumId, artistID, title, artist, album, duration, trackNumber, contentUri));
             }
             while (cursor.moveToNext());
         if (cursor != null)
