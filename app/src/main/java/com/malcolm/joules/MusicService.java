@@ -6,6 +6,7 @@ import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -19,8 +20,10 @@ import androidx.annotation.Nullable;
 import androidx.media.MediaBrowserServiceCompat;
 
 import com.google.android.exoplayer2.ExoPlayer;
+import com.malcolm.joules.models.Song;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MusicService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener,
@@ -38,6 +41,16 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     //path to the audio file
     private String mediaFile;
     private String TAG = MusicService.class.getSimpleName();
+    public static final String ACTION_PLAY = "com.malcolm.joules.musicservice.ACTION_PLAY";
+    public static final String ACTION_PAUSE = "com.malcolm.joules.musicservice.ACTION_PAUSE";
+    public static final String ACTION_PREVIOUS = "com.malcolm.joules.musicservice.ACTION_PREVIOUS";
+    public static final String ACTION_NEXT = "com.malcolm.joules.musicservice.ACTION_NEXT";
+    public static final String ACTION_STOP = "com.malcolm.joules.musicservice.ACTION_STOP";
+    private final IBinder iBinder = new LocalBinder();
+    private int songIndex = 0;
+    private ArrayList<Song> songsList;
+
+
     public MusicService() {
     }
 
@@ -110,7 +123,7 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
         // temp set
         try {
             // Set the data source to the mediaFile location
-            mediaPlayer.setDataSource(mediaFile);
+            mediaPlayer.setDataSource(this, songsList.get(songIndex).uri);
         } catch (IOException e) {
             e.printStackTrace();
             stopSelf();
@@ -119,7 +132,7 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return iBinder;
     }
 
     @Nullable
@@ -179,8 +192,23 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     @Override
     public void onCreate() {
         super.onCreate();
+        stateBuilder = new PlaybackStateCompat.Builder();
+        initMediaSession();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+    private void initMediaSession () {
         mediaSession = new MediaSessionCompat(this,TAG);
         this.setSessionToken(mediaSession.getSessionToken());
+        PlaybackStateCompat playbackStateCompat = stateBuilder
+                .setState(PlaybackStateCompat.STATE_NONE,PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1.0f)
+                .setActions(PlaybackStateCompat.ACTION_PREPARE)
+                .build();
+        mediaSession.setPlaybackState(playbackStateCompat);
         mediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
@@ -191,42 +219,88 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
             public void onPlay() {
                 super.onPlay();
                 resumeMedia();
+                mediaSession.setPlaybackState(stateBuilder
+                .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getDuration(), 1.0f)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
+                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
+                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
+                .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
+                .build());
             }
 
             @Override
             public void onPause() {
                 super.onPause();
                 pauseMedia();
+                mediaSession.setPlaybackState(stateBuilder
+                .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getDuration(), 1.0f)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
+                        .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
+                        .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
+                        .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
+                        .build());
             }
 
             @Override
             public void onSkipToNext() {
                 super.onSkipToNext();
+                skipToNext();
+                // TODO adjust playback state actions on realities of arraylists
+                mediaSession.setPlaybackState(stateBuilder
+                .setState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1.0f)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
+                        .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
+                        .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
+                        .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
+                        .build());
             }
 
             @Override
             public void onSkipToPrevious() {
                 super.onSkipToPrevious();
+                skipToPrevious();
+                // TODO adjust playback state actions on realities of arraylists
+                mediaSession.setPlaybackState(stateBuilder
+                .setState(PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1.0f)
+                        .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
+                                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
+                                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
+                                .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
+                                .build()
+                );
             }
 
             @Override
             public void onStop() {
                 super.onStop();
                 stopMedia();
+                mediaSession.setPlaybackState(stateBuilder
+                .setState(PlaybackStateCompat.STATE_STOPPED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                1.0f)
+                        .setActions(PlaybackStateCompat.ACTION_PLAY)
+                        .setActions(PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE)
+                        .build()
+                );
             }
 
             @Override
             public void onSeekTo(long pos) {
                 super.onSeekTo(pos);
                 seekPos(pos);
+                mediaSession.setPlaybackState(stateBuilder
+                .setState(PlaybackStateCompat.STATE_PAUSED, pos, 1.0f)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
+                .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
+                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
+                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
+                .build());
             }
         });
         mediaSession.setActive(true);
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+    private void updatePlaybackStateCompat () {
+
     }
 
     private boolean removeAudioFocus() {
@@ -275,5 +349,11 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     @Override
     public void onSeekComplete(MediaPlayer mp) {
 
+    }
+
+    public class LocalBinder extends Binder {
+        public  MusicService getService(){
+            return MusicService.this;
+        }
     }
 }
