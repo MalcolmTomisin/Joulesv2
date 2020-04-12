@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -21,6 +22,7 @@ import androidx.media.MediaBrowserServiceCompat;
 
 import com.google.android.exoplayer2.ExoPlayer;
 import com.malcolm.joules.models.Song;
+import com.malcolm.joules.utiils.JoulesUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     private ExoPlayer exoPlayer;
     private MediaSessionCompat mediaSession;
     private PlaybackStateCompat.Builder stateBuilder;
+    private MediaMetadataCompat.Builder metadataBuilder;
     private int resumePosition = 0;
     private AudioManager audioManager;
     private AudioAttributes mPlayBack;
@@ -49,6 +52,8 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     private final IBinder iBinder = new LocalBinder();
     private int songIndex = 0;
     private ArrayList<Song> songsList;
+    private Song activeSong;
+    private JoulesUtil joulesUtil;
 
 
     public MusicService() {
@@ -128,6 +133,7 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
             e.printStackTrace();
             stopSelf();
         }
+        mediaPlayer.prepareAsync();
     }
     @Override
     public IBinder onBind(Intent intent) {
@@ -193,6 +199,7 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     public void onCreate() {
         super.onCreate();
         stateBuilder = new PlaybackStateCompat.Builder();
+        metadataBuilder = new MediaMetadataCompat.Builder();
         initMediaSession();
     }
 
@@ -220,11 +227,10 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
                 super.onPlay();
                 resumeMedia();
                 mediaSession.setPlaybackState(stateBuilder
-                .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getDuration(), 1.0f)
-                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
-                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
-                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
-                .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
+                .setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1.0f)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SET_REPEAT_MODE
+                        | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS| PlaybackStateCompat.ACTION_SEEK_TO
+                        | PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE)
                 .build());
             }
 
@@ -233,11 +239,10 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
                 super.onPause();
                 pauseMedia();
                 mediaSession.setPlaybackState(stateBuilder
-                .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getDuration(), 1.0f)
-                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
-                        .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
-                        .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
-                        .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
+                .setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1.0f)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SET_REPEAT_MODE
+                        | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS| PlaybackStateCompat.ACTION_SEEK_TO
+                        | PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE)
                         .build());
             }
 
@@ -248,10 +253,9 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
                 // TODO adjust playback state actions on realities of arraylists
                 mediaSession.setPlaybackState(stateBuilder
                 .setState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1.0f)
-                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
-                        .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
-                        .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
-                        .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SET_REPEAT_MODE
+                        | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS| PlaybackStateCompat.ACTION_SEEK_TO
+                        | PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE)
                         .build());
             }
 
@@ -262,10 +266,9 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
                 // TODO adjust playback state actions on realities of arraylists
                 mediaSession.setPlaybackState(stateBuilder
                 .setState(PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1.0f)
-                        .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
-                                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
-                                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
-                                .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
+                        .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SET_REPEAT_MODE
+                                | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS| PlaybackStateCompat.ACTION_SEEK_TO
+                                | PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE)
                                 .build()
                 );
             }
@@ -278,7 +281,9 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
                 .setState(PlaybackStateCompat.STATE_STOPPED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
                 1.0f)
                         .setActions(PlaybackStateCompat.ACTION_PLAY)
-                        .setActions(PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE)
+                        .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SET_REPEAT_MODE
+                                | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS| PlaybackStateCompat.ACTION_SEEK_TO
+                                | PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE)
                         .build()
                 );
             }
@@ -289,10 +294,9 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
                 seekPos(pos);
                 mediaSession.setPlaybackState(stateBuilder
                 .setState(PlaybackStateCompat.STATE_PAUSED, pos, 1.0f)
-                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
-                .setActions(PlaybackStateCompat.ACTION_SET_REPEAT_MODE)
-                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
-                .setActions(PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SET_REPEAT_MODE
+                | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS| PlaybackStateCompat.ACTION_SEEK_TO
+                | PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE)
                 .build());
             }
         });
@@ -301,6 +305,15 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
 
     private void updatePlaybackStateCompat () {
 
+    }
+
+    private void updateMediaMetaData(){
+        mediaSession.setMetadata(metadataBuilder
+        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, activeSong.albumName)
+        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST,activeSong.artistName)
+        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, activeSong.title)
+        .build()
+        );
     }
 
     private boolean removeAudioFocus() {
