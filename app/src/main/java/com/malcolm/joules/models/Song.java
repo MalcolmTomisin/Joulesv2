@@ -1,8 +1,10 @@
 package com.malcolm.joules.models;
 
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class Song {
+public class Song implements Parcelable {
 
     public final long albumId;
     public final String albumName;
@@ -36,5 +38,47 @@ public class Song {
         this.title = title;
         this.trackNumber = trackNumber;
         this.uri = content;
+    }
+
+    public static final Creator<Song> CREATOR = new Creator<Song>() {
+        @Override
+        public Song createFromParcel(Parcel in) {
+            return new Song(in);
+        }
+
+        @Override
+        public Song[] newArray(int size) {
+            return new Song[size];
+        }
+    };
+
+    protected Song(Parcel in) {
+        albumId = in.readLong();
+        albumName = in.readString();
+        artistId = in.readLong();
+        artistName = in.readString();
+        duration = in.readInt();
+        id = in.readLong();
+        title = in.readString();
+        trackNumber = in.readInt();
+        uri = Uri.parse(in.readString());
+    }
+
+    @Override
+    public int describeContents() {
+        return hashCode();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(albumId);
+        dest.writeLong(id);
+        dest.writeLong(artistId);
+        dest.writeInt(duration);
+        dest.writeInt(trackNumber);
+        dest.writeString(albumName);
+        dest.writeString(artistName);
+        dest.writeString(title);
+        dest.writeString(uri.toString());
     }
 }

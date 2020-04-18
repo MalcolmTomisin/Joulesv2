@@ -2,6 +2,7 @@ package com.malcolm.joules;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -23,6 +24,7 @@ import androidx.media.MediaBrowserServiceCompat;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.malcolm.joules.models.Song;
 import com.malcolm.joules.utiils.JoulesUtil;
+import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,7 +52,7 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     public static final String ACTION_NEXT = "com.malcolm.joules.musicservice.ACTION_NEXT";
     public static final String ACTION_STOP = "com.malcolm.joules.musicservice.ACTION_STOP";
     private final IBinder iBinder = new LocalBinder();
-    private int songIndex = 0;
+    private int songIndex = -1;
     private ArrayList<Song> songsList;
     private Song activeSong;
     private JoulesUtil joulesUtil;
@@ -308,10 +310,12 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     }
 
     private void updateMediaMetaData(){
+        Bitmap albumArt = ImageLoader.getInstance().loadImageSync(JoulesUtil.getAlbumArtUri(activeSong.albumId).toString());
         mediaSession.setMetadata(metadataBuilder
         .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, activeSong.albumName)
         .putString(MediaMetadataCompat.METADATA_KEY_ARTIST,activeSong.artistName)
         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, activeSong.title)
+        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
         .build()
         );
     }
