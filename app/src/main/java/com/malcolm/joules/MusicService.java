@@ -17,7 +17,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -27,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.media.MediaBrowserServiceCompat;
+import androidx.media.session.MediaButtonReceiver;
 import androidx.palette.graphics.Palette;
 
 import com.google.android.exoplayer2.ExoPlayer;
@@ -118,10 +121,29 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     }
 
     private void skipToNext(){
+            if (songIndex == songsList.size() - 1){
+                songIndex = 0;
+                activeSong = songsList.get(songIndex);
+            } else {
+                activeSong = songsList.get(songIndex++);
+            }
 
+            new StorageUtil(getApplicationContext()).storeAudioIndex(songIndex);
+            stopMedia();
+            mediaPlayer.reset();
+            initMediaPlayer();
     }
     private void skipToPrevious(){
-
+        if (songIndex == 0){
+            songIndex = songsList.size() - 1;
+            activeSong = songsList.get(songIndex);
+        } else {
+            activeSong = songsList.get(songIndex--);
+        }
+        new StorageUtil(getApplicationContext()).storeAudioIndex(songIndex);
+        stopMedia();
+        mediaPlayer.reset();
+        initMediaPlayer();
     }
     private void seekPos(long pos){
         if (mediaPlayer == null)
@@ -358,6 +380,9 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     }
 
     private void buildNotification(PlaybackStatus playbackStatus){
+        MediaControllerCompat mediaControllerCompat = mediaSession.getController();
+        MediaMetadataCompat mediaMetadataCompat = mediaControllerCompat.getMetadata();
+        MediaDescriptionCompat mediaDescription = mediaMetadataCompat.getDescription();
         int notificationAction = R.drawable.exo_notification_pause;
         int PAUSE_FLAG = 1;
         int PLAY_FLAG = 0;
@@ -387,15 +412,23 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
                         .generate().getDarkVibrantColor(Color.parseColor("#403f4d")))
                 .setLargeIcon(albumArt)
                 .setSmallIcon(android.R.drawable.stat_sys_headset)
-                .setContentText(activeSong.artistName)
-                .setContentTitle(activeSong.title)
+                .setContentText(mediaDescription.getSubtitle())
+                .setContentTitle(mediaDescription.getTitle())
                 .setContentInfo(activeSong.albumName)
+                .setContentIntent(mediaControllerCompat.getSessionActivity())
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(this,
+                        PlaybackStateCompat.ACTION_STOP))
                 .addAction(R.drawable.exo_icon_previous,"previous", playbackActionIntent(PREVIOUS_FLAG))
-                .addAction(R.drawable.exo_icon_next, "next", playbackActionIntent(NEXT_FLAG));
+                .addAction(R.drawable.exo_icon_next, "next", playbackActionIntent(NEXT_FLAG))
+                .addAction(new NotificationCompat.Action(R.drawable.exo_icon_pause,
+                        "pause",MediaButtonReceiver.buildMediaButtonPendingIntent(this,
+                        PlaybackStateCompat.ACTION_PLAY_PAUSE)));
+        startForeground(NOTIFICATION_ID, builder.build());
 
-        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
-
-        notificationManagerCompat.notify(NOTIFICATION_ID,builder.build());
+//        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
+//
+//        notificationManagerCompat.notify(NOTIFICATION_ID,builder.build());
     }
     private void removeNotification(){
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
@@ -421,6 +454,25 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
                 break;
         }
         return null;
+    }
+
+    private void handleIncomingActions(Intent playbackAction) {
+        if (playbackAction == null || playbackAction.getAction() == null) return;
+        MediaControllerCompat controllerCompat = mediaSession.getController();
+        MediaControllerCompat.TransportControls transportControls = controllerCompat.getTransportControls();
+
+        String actionString = playbackAction.getAction();
+        if (actionString.equalsIgnoreCase(ACTION_PLAY)) {
+            transportControls.play();
+        } else if (actionString.equalsIgnoreCase(ACTION_PAUSE)) {
+            transportControls.pause();
+        } else if (actionString.equalsIgnoreCase(ACTION_NEXT)) {
+            transportControls.skipToNext();
+        } else if (actionString.equalsIgnoreCase(ACTION_PREVIOUS)) {
+            transportControls.skipToPrevious();
+        } else if (actionString.equalsIgnoreCase(ACTION_STOP)) {
+            transportControls.stop();
+        }
     }
 
     private void createNotificationChannel(){
