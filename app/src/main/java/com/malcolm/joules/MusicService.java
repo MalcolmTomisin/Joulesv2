@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioAttributes;
@@ -22,6 +23,8 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -71,7 +74,11 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     private ArrayList<Song> songsList;
     private Song activeSong;
     private JoulesUtil joulesUtil;
-    private BroadcastReceiver playNewAudio = new BroadcastReceiver() {
+    private boolean ongoingCall = false;
+    private PhoneStateListener phoneStateListener;
+    private TelephonyManager telephonyManager;
+    private boolean IS_SHUFFLING = false;
+    private BroadcastReceiver playNewSong = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             songIndex = new StorageUtil(getApplicationContext()).loadAudioIndex();
@@ -87,11 +94,25 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
             buildNotification(PlaybackStatus.PLAYING);
         }
     };
+    private BroadcastReceiver noisyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            pauseMedia();
+            buildNotification(PlaybackStatus.PAUSED);
+        }
+    };
 
+    private void registerNoisyReceiver() {
+        IntentFilter intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        registerReceiver(noisyReceiver, intentFilter);
+    }
 
     public MusicService() {
     }
 
+    private void registerPlayNewSong() {
+        //TODO REGISTER PLAYNEWSONG RECIEVER
+    }
     private void playMedia() {
         if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
@@ -250,6 +271,10 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     @Override
     public void onCreate() {
         super.onCreate();
+
+        callStateListener();
+        registerNoisyReceiver();
+        registerPlayNewSong();
         stateBuilder = new PlaybackStateCompat.Builder();
         metadataBuilder = new MediaMetadataCompat.Builder();
         initMediaSession();
@@ -258,6 +283,17 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (mediaPlayer != null){
+            stopMedia();
+            mediaPlayer.release();
+        }
+        removeAudioFocus();
+        if(phoneStateListener != null){
+            telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE);
+        }
+        removeNotification();
+        unregisterReceiver(noisyReceiver);
+        unregisterReceiver(playNewSong);
     }
 
     private void initMediaSession () {
@@ -412,8 +448,8 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
                         .generate().getDarkVibrantColor(Color.parseColor("#403f4d")))
                 .setLargeIcon(albumArt)
                 .setSmallIcon(android.R.drawable.stat_sys_headset)
-                .setContentText(mediaDescription.getSubtitle())
-                .setContentTitle(mediaDescription.getTitle())
+                .setContentText(activeSong.artistName)
+                .setContentTitle(activeSong.title)
                 .setContentInfo(activeSong.albumName)
                 .setContentIntent(mediaControllerCompat.getSessionActivity())
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -496,6 +532,8 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
         return AudioManager.AUDIOFOCUS_REQUEST_GRANTED == audioManager.abandonAudioFocus(this);
     }
 
+
+
     @Override
     public void onBufferingUpdate(MediaPlayer mp, int percent) {
 
@@ -535,6 +573,34 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     @Override
     public void onSeekComplete(MediaPlayer mp) {
 
+    }
+
+    private void callStateListener(){
+        telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        phoneStateListener = new PhoneStateListener(){
+            @Override
+            public void onCallStateChanged(int state, String phoneNumber) {
+                super.onCallStateChanged(state, phoneNumber);
+                switch (state){
+                    case TelephonyManager.CALL_STATE_OFFHOOK:
+                    case TelephonyManager.CALL_STATE_RINGING:
+                        if(mediaPlayer != null){
+                            pauseMedia();
+                            ongoingCall = true;
+                        }
+                        break;
+                    case TelephonyManager.CALL_STATE_IDLE:
+                        if (mediaPlayer != null){
+                            if (ongoingCall){
+                                ongoingCall = false;
+                                resumeMedia();
+                            }
+                        }
+                        break;
+                }
+            }
+        };
+        telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
     }
 
     public class LocalBinder extends Binder {
