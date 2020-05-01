@@ -72,6 +72,7 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     private final IBinder iBinder = new LocalBinder();
     private int songIndex = -1;
     private ArrayList<Song> songsList;
+    private int[] ShuffledSongsIndex;
     private Song activeSong;
     private JoulesUtil joulesUtil;
     private boolean ongoingCall = false;

@@ -9,10 +9,15 @@ import android.os.Environment;
 
 import com.malcolm.joules.R;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class JoulesUtil {
     public static Uri getAlbumArtUri(long albumId){
@@ -45,5 +50,25 @@ public class JoulesUtil {
             e.printStackTrace();
         }
         return Uri.fromFile(tempFile);
+    }
+
+    public static ArrayList shuffleAudioList(int startIndex, int lastIndex) {
+        int size = lastIndex - startIndex + 1;
+        int[] array = new int[size];
+
+        for(int i = 0; i < size; i++){
+            array[i] = i;
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            ArrayList songsIndexList = new ArrayList(Arrays.asList(Arrays.stream(array)
+            .boxed()
+            .toArray(Integer[]::new)
+            ));
+            Collections.shuffle(songsIndexList);
+            return songsIndexList;
+        }
+        ArrayList songsIndexList = (ArrayList<Integer>) Arrays.asList(ArrayUtils.toObject(array));
+        Collections.shuffle(songsIndexList);
+        return  songsIndexList;
     }
 }

@@ -6,6 +6,7 @@ android {
 
     compileOptions {
         targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = 1.8
     }
 
     defaultConfig {
@@ -36,9 +37,10 @@ dependencies {
     // ViewModel
     implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
     // LiveData
-    implementation "com.google.android.material:material:1.2.0-alpha05"
+    implementation "com.google.android.material:material:1.2.0-alpha06"
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'androidx.palette:palette:1.0.0'
+    implementation 'org.apache.commons:commons-lang3:3.10'
     implementation "androidx.lifecycle:lifecycle-livedata:$lifecycle_version"
     implementation 'com.google.android.exoplayer:exoplayer-core:2.11.3'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.11.3'
