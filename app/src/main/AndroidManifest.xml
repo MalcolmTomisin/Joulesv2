@@ -21,7 +21,6 @@
         <service
             android:name=".MusicService"
             android:enabled="true"
-            android:description="Joules Music Service"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />

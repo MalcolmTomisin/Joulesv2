@@ -67,7 +67,8 @@ public class JoulesUtil {
             Collections.shuffle(songsIndexList);
             return songsIndexList;
         }
-        ArrayList songsIndexList = (ArrayList<Integer>) Arrays.asList(ArrayUtils.toObject(array));
+
+        ArrayList songsIndexList = new ArrayList<>(Arrays.asList(ArrayUtils.toObject(array))) ;
         Collections.shuffle(songsIndexList);
         return  songsIndexList;
     }
