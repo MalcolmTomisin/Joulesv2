@@ -25,6 +25,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -67,6 +68,8 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     public static final String ACTION_PREVIOUS = "com.malcolm.joules.musicservice.ACTION_PREVIOUS";
     public static final String ACTION_NEXT = "com.malcolm.joules.musicservice.ACTION_NEXT";
     public static final String ACTION_STOP = "com.malcolm.joules.musicservice.ACTION_STOP";
+    private static final String MEDIA_ROOT_ID = "com.malcolm.joules.musicservice.media_id";
+    private static final String EMPTY_ROOT_ID = "com.malcolm.joules.musicservice.empty_root";
     private static final int NOTIFICATION_ID = 345;
     private static final String CHANNEL_ID = "Joules Channel";
     private final IBinder iBinder = new LocalBinder();
@@ -218,12 +221,42 @@ public class MusicService extends MediaBrowserServiceCompat implements MediaPlay
     @Nullable
     @Override
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) {
-        return null;
+        if (!isValidClient(clientPackageName,clientUid))
+            return new BrowserRoot(EMPTY_ROOT_ID, null);
+        return new BrowserRoot(MEDIA_ROOT_ID, null);
     }
 
     @Override
     public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
 
+        if (TextUtils.equals(EMPTY_ROOT_ID, parentId)){
+            result.sendResult(null);
+            return;
+        }
+        List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
+        if (MEDIA_ROOT_ID.equals(parentId)){
+            for (Song song : songsList ){
+                mediaItems.add(new MediaBrowserCompat.MediaItem(metadataBuilder
+                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, song.albumName)
+                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST,song.artistName)
+                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.title)
+                        .build().getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
+
+            }
+            result.sendResult(mediaItems);
+        }
+        else {
+            result.sendError(null);
+        }
+
+    }
+
+    private boolean isValidClient (String callingName, int client){
+        if (client == android.os.Process.myPid() ||
+                client == android.os.Process.getUidForName(callingName)){
+            return true;
+        }
+        return callingName.startsWith("com.android");
     }
 
 
