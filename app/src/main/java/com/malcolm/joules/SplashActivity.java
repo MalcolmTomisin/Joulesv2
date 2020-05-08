@@ -27,13 +27,10 @@ public class SplashActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         new Handler().postDelayed(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        Intent decideIntent = new Intent(SplashActivity.this,MainActivity.class);
-                        SplashActivity.this.startActivity(decideIntent);
-                        SplashActivity.this.finish();
-                    }
+                () -> {
+                    Intent decideIntent = new Intent(SplashActivity.this,MainActivity.class);
+                    SplashActivity.this.startActivity(decideIntent);
+                    SplashActivity.this.finish();
                 },
                 SPLASH_TIME
         );
