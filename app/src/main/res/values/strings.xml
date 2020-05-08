@@ -11,4 +11,5 @@
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="channel_name">Joules</string>
     <string name="channel_description">Joules Notification Channel</string>
+    <string name="joules_logo">joules_logo</string>
 </resources>
