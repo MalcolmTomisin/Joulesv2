@@ -4,6 +4,6 @@
     >
     <target
         android:name="amplitude_one"
-        android:animation="@android:anim/accelerate_interpolator"
+        android:animation="@animator/amplitude"
 />
 </animated-vector>
