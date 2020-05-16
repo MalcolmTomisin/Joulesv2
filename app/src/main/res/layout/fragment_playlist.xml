@@ -19,6 +19,7 @@
                 android:theme="@style/Theme.MaterialComponents.DayNight"
                 app:popupTheme="@style/Theme.MaterialComponents.DayNight"
                 />
+<!--            #TODO viewpager element-->
         </LinearLayout>
     </FrameLayout>
 </layout>
