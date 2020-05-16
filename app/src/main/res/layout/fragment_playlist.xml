@@ -20,6 +20,13 @@
                 app:popupTheme="@style/Theme.MaterialComponents.DayNight"
                 />
 <!--            #TODO viewpager element-->
+            <com.malcolm.joules.widgets.MultiViewPager
+                android:id="@+id/playlist_pager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="bottom"
+                app:matchChildWidth="@+id/vg_cover"
+                />
         </LinearLayout>
     </FrameLayout>
 </layout>
