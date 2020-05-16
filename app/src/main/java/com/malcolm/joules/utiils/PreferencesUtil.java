@@ -1,6 +1,5 @@
 package com.malcolm.joules.utiils;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -43,8 +42,7 @@ public final class PreferencesUtil {
         mPreferences.registerOnSharedPreferenceChangeListener(listener);
     }
 
-    @SuppressLint("StaticFieldLeak")
-    private void setSortOrder (final String key, final String value){
+    private static void setSortOrder (final String key, final String value){
          final AsyncTask<Void, Void, Void> asyncTask;
         asyncTask = new AsyncTask<Void, Void, Void>() {
 
@@ -108,4 +106,66 @@ public final class PreferencesUtil {
     public void setSongSortOrder(final String value) {
         setSortOrder(SONG_SORT_ORDER, value);
     }
+
+    public boolean getAnimations(){return mPreferences.getBoolean(TOGGLE_ANIMATIONS, true);}
+
+    public boolean isArtistsInGrid(){return mPreferences.getBoolean(TOGGLE_ARTIST_GRID, true);}
+
+    public static void setArtistsInGrid(final boolean b){
+        new AsyncTask<Void,Void,Void>(){
+            @Override
+            protected Void doInBackground(Void... voids) {
+                final SharedPreferences.Editor editor = mPreferences.edit();
+                editor.putBoolean(TOGGLE_ARTIST_GRID, b);
+                editor.apply();
+                return null;
+            }
+        }.execute();
+    }
+
+    public boolean isAlbumsInGrid() {
+        return mPreferences.getBoolean(TOGGLE_ALBUM_GRID, true);
+    }
+
+    public static void setAlbumsInGrid(final boolean b){
+        new AsyncTask<Void,Void,Void>(){
+            @Override
+            protected Void doInBackground(Void... voids) {
+                final SharedPreferences.Editor editor = mPreferences.edit();
+                editor.putBoolean(TOGGLE_ALBUM_GRID, b);
+                editor.apply();
+                return null;
+            }
+        }.execute();
+    }
+
+    public int getStartPageIndex() {
+        return mPreferences.getInt(START_PAGE_INDEX, 0);
+    }
+
+    public static void setStartPageIndex(final int index){
+      new AsyncTask<Void,Void,Void>(){
+          @Override
+          protected Void doInBackground(Void... voids){
+              final SharedPreferences.Editor editor = mPreferences.edit();
+              editor.putInt(START_PAGE_INDEX, index);
+              editor.apply();
+              return null;
+          }
+
+        }.execute();
+    }
+
+    public void setLastOpenedAsStartPagePreference(boolean preference) {
+        final SharedPreferences.Editor editor = mPreferences.edit();
+        editor.putBoolean(START_PAGE_PREFERENCE_LASTOPENED, preference);
+        editor.apply();
+    }
+
+    public boolean lastOpenedIsStartPagePreference() {
+        return mPreferences.getBoolean(START_PAGE_PREFERENCE_LASTOPENED, true);
+    }
+
+
 }
+

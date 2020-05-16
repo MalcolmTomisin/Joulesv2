@@ -1,14 +1,11 @@
 package com.malcolm.joules;
 
 import android.os.Bundle;
-import android.view.MenuItem;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
-import com.google.android.material.navigation.NavigationView;
 import com.malcolm.joules.databinding.ActivityMainBinding;
 
 import java.util.Objects;
@@ -28,12 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         mainBinding.designNavigationView.inflateHeaderView(R.layout.navigation_header);
-        mainBinding.designNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                return false;
-            }
-        });
+        mainBinding.designNavigationView.setNavigationItemSelectedListener(item -> false);
     }
 
 }
