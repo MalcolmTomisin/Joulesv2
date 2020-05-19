@@ -2,10 +2,13 @@ package com.malcolm.joules.utiils;
 
 import android.content.ContentUris;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.BaseColumns;
+import android.provider.MediaStore;
 
 import com.malcolm.joules.R;
 
@@ -20,6 +23,8 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class JoulesUtil {
+    public static final String MUSIC_ONLY_SELECTION = MediaStore.Audio.AudioColumns.IS_MUSIC + "=1"
+            + " AND " + MediaStore.Audio.AudioColumns.TITLE + " != ''";
     public static Uri getAlbumArtUri(long albumId){
         if (ContentUris.withAppendedId(Uri.parse("content://media/external/audio/albumart"),albumId) != null)
             return ContentUris.withAppendedId(Uri.parse("content://media/external/audio/albumart"),albumId);
@@ -71,5 +76,69 @@ public class JoulesUtil {
         ArrayList songsIndexList = new ArrayList<>(Arrays.asList(ArrayUtils.toObject(array))) ;
         Collections.shuffle(songsIndexList);
         return  songsIndexList;
+    }
+
+    public static final int getSongCountForPlaylist(final Context context, final long playlistId) {
+        Cursor c = context.getContentResolver().query(
+                MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId),
+                new String[]{BaseColumns._ID}, MUSIC_ONLY_SELECTION, null, null);
+
+        if (c != null) {
+            int count = 0;
+            if (c.moveToFirst()) {
+                count = c.getCount();
+            }
+            c.close();
+            c = null;
+            return count;
+        }
+
+        return 0;
+    }
+
+    public enum IdType {
+        NA(0),
+        Artist(1),
+        Album(2),
+        Playlist(3);
+
+        public final int mId;
+
+        IdType(final int id) {
+            mId = id;
+        }
+
+        public static IdType getTypeById(int id) {
+            for (IdType type : values()) {
+                if (type.mId == id) {
+                    return type;
+                }
+            }
+
+            throw new IllegalArgumentException("Unrecognized id: " + id);
+        }
+    }
+    public enum PlaylistType {
+        LastAdded(-1, R.string.playlist_last_added),
+        RecentlyPlayed(-2, R.string.playlist_recently_played),
+        TopTracks(-3, R.string.playlist_top_tracks);
+
+        public long mId;
+        public int mTitleId;
+
+        PlaylistType(long id, int titleId) {
+            mId = id;
+            mTitleId = titleId;
+        }
+
+        public static PlaylistType getTypeById(long id) {
+            for (PlaylistType type : PlaylistType.values()) {
+                if (type.mId == id) {
+                    return type;
+                }
+            }
+
+            return null;
+        }
     }
 }

@@ -10,15 +10,19 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.malcolm.joules.R;
 import com.malcolm.joules.databinding.FragmentPlaylistBinding;
+import com.malcolm.joules.loaders.PlaylistLoader;
+import com.malcolm.joules.models.Playlist;
 import com.malcolm.joules.widgets.MultiViewPager;
+
+import java.util.List;
 
 public class PlaylistFragment extends Fragment {
     int PlaylistCount;
-    FragmentStatePagerAdapter adapter;
+    FragmentStateAdapter adapter;
     MultiViewPager pager;
 
     @Nullable
@@ -33,6 +37,21 @@ public class PlaylistFragment extends Fragment {
             bar.setTitle("Playlists");
         }
 
+        final List<Playlist>  playlists = PlaylistLoader.getPlaylists(getActivity(),true);
+        PlaylistCount = playlists.size();
+
+        adapter = new FragmentStateAdapter(this) {
+            @NonNull
+            @Override
+            public Fragment createFragment(int position) {
+                return PlaylistPagerFragment.newInstance(position);
+            }
+
+            @Override
+            public int getItemCount() {
+                return PlaylistCount;
+            }
+        };
         // #TODO rewrite loader with viewmodel
         return binding.getRoot();
     }
