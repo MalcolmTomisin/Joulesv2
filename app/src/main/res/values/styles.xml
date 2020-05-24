@@ -22,4 +22,46 @@
         <item name="cornerSize">@dimen/corner_size</item>
     </style>
 
+    <style name="DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="spinBars">true</item>
+        <item name="color">@android:color/white</item>
+    </style>
+
+
+
+    <style name="TextAppearance.Album.Title" parent="@style/TextAppearance.AppCompat.Large">
+        <item name="android:textSize">29sp</item>
+    </style>
+
+    <style name="TextApperance.Artist.Title" parent="@style/TextAppearance.AppCompat.Large">
+        <item name="android:textSize">29sp</item>
+    </style>
+
+    <style name="TransparentText" parent="@android:style/TextAppearance">
+        <item name="android:textColor">#00666666</item>
+    </style>
+
+
+    <style name="FabStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_margin">16dp</item>
+        <item name="borderWidth">0dp</item>
+        <item name="elevation">6dp</item>
+        <item name="pressedTranslationZ">12dp</item>
+        <item name="rippleColor">@android:color/white</item>
+    </style>
+
+    <style name="CardViewStyle.Light" parent="CardView">
+        <item name="cardBackgroundColor">@color/window_background</item>
+    </style>
+
+    <style name="CardViewStyle.Dark" parent="CardView">
+        <item name="cardBackgroundColor">@color/window_background_dark</item>
+    </style>
+
+    <style name="CardViewStyle.Black" parent="CardView">
+        <item name="cardBackgroundColor">@color/window_background_black</item>
+    </style>
+
 </resources>
