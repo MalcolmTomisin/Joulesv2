@@ -143,4 +143,6 @@ public class MultiViewPager extends ViewPager {
     public void setMaxHeight(int height) {
         mMaxHeight = height;
     }
+
+
 }
