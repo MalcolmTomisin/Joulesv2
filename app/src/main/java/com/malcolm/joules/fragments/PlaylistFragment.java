@@ -1,7 +1,11 @@
 package com.malcolm.joules.fragments;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -14,6 +18,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.malcolm.joules.R;
 import com.malcolm.joules.databinding.FragmentPlaylistBinding;
+import com.malcolm.joules.dialogs.CreatePlaylistDialog;
 import com.malcolm.joules.loaders.PlaylistLoader;
 import com.malcolm.joules.models.Playlist;
 import com.malcolm.joules.widgets.MultiViewPager;
@@ -54,5 +59,47 @@ public class PlaylistFragment extends Fragment {
         };
         // #TODO rewrite loader with viewmodel
         return binding.getRoot();
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_playlist, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch(item.getItemId()){
+            case R.id.action_new_playlist:
+                CreatePlaylistDialog.newInstance().show(getChildFragmentManager(),"CREATE PLAYLIST");
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void updatePlaylists(final long id) {
+        final List<Playlist> playlists = PlaylistLoader.getPlaylists(getActivity(), true);
+        PlaylistCount = playlists.size();
+        adapter.notifyDataSetChanged();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < playlists.size(); i++) {
+                    long playlistid = playlists.get(i).id;
+                    if (playlistid == id) {
+                        pager.setCurrentItem(i);
+                        break;
+                    }
+                }
+            }
+        }, 200);
+
     }
 }
