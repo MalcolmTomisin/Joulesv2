@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <FrameLayout
-        android:layout_width="match_parent" android:layout_height="match_parent"
-        android:orientation="vertical"
-        >
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -17,16 +19,14 @@
                 android:layout_height="?attr/actionBarSize"
                 android:minHeight="?attr/actionBarSize"
                 android:theme="@style/Theme.MaterialComponents.DayNight"
-                app:popupTheme="@style/Theme.MaterialComponents.DayNight"
-                />
-<!--            #TODO viewpager element-->
+                app:popupTheme="@style/Theme.MaterialComponents.DayNight" />
+            <!--            #TODO viewpager element-->
             <com.malcolm.joules.widgets.MultiViewPager
                 android:id="@+id/playlist_pager"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="bottom"
-                app:matchChildWidth="@+id/vg_cover"
-                />
+                app:matchChildWidth="@+id/vg_cover" />
         </LinearLayout>
     </FrameLayout>
 </layout>
